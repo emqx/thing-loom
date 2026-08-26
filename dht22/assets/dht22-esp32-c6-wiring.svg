@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" role="img" aria-labelledby="title description">
+  <title id="title">DHT22 module connected to an ESP32-C6-DevKitC-1</title>
+  <desc id="description">Connect DHT22 VCC to ESP32 3V3, DATA to GPIO 4, and GND to GND. Follow the module labels, not physical pin order.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #172033; }
+    .heading { font-size: 30px; font-weight: 700; }
+    .label { font-size: 21px; font-weight: 650; }
+    .note { font-size: 18px; fill: #526078; }
+    .wire { fill: none; stroke-width: 8; stroke-linecap: round; }
+  </style>
+  <rect width="1000" height="560" rx="24" fill="#f8fafc"/>
+  <text x="500" y="52" text-anchor="middle" class="heading">ESP32-C6 + three-pin DHT22 wiring</text>
+
+  <rect x="90" y="115" width="285" height="335" rx="24" fill="#e9edf4" stroke="#64748b" stroke-width="3"/>
+  <rect x="142" y="155" width="180" height="160" rx="18" fill="#f4f7fb" stroke="#64748b" stroke-width="3"/>
+  <circle cx="180" cy="194" r="6" fill="#94a3b8"/><circle cx="215" cy="194" r="6" fill="#94a3b8"/><circle cx="250" cy="194" r="6" fill="#94a3b8"/><circle cx="285" cy="194" r="6" fill="#94a3b8"/>
+  <circle cx="180" cy="230" r="6" fill="#94a3b8"/><circle cx="215" cy="230" r="6" fill="#94a3b8"/><circle cx="250" cy="230" r="6" fill="#94a3b8"/><circle cx="285" cy="230" r="6" fill="#94a3b8"/>
+  <circle cx="180" cy="266" r="6" fill="#94a3b8"/><circle cx="215" cy="266" r="6" fill="#94a3b8"/><circle cx="250" cy="266" r="6" fill="#94a3b8"/><circle cx="285" cy="266" r="6" fill="#94a3b8"/>
+  <text x="232" y="405" text-anchor="middle" class="label">DHT22 module</text>
+  <text x="232" y="435" text-anchor="middle" class="note">Use the printed labels</text>
+  <circle cx="375" cy="190" r="8" fill="#ef4444"/><text x="345" y="196" text-anchor="end" class="label">VCC</text>
+  <circle cx="375" cy="270" r="8" fill="#eab308"/><text x="345" y="276" text-anchor="end" class="label">DATA</text>
+  <circle cx="375" cy="350" r="8" fill="#1f2937"/><text x="345" y="356" text-anchor="end" class="label">GND</text>
+
+  <rect x="650" y="100" width="260" height="380" rx="24" fill="#172033" stroke="#0b1020" stroke-width="3"/>
+  <rect x="714" y="115" width="132" height="58" rx="8" fill="#cbd5e1"/>
+  <rect x="750" y="205" width="125" height="150" rx="12" fill="#34445f" stroke="#94a3b8" stroke-width="2"/>
+  <text x="812" y="265" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">ESP32-C6</text>
+  <text x="812" y="298" text-anchor="middle" font-size="16" fill="#dbeafe">DevKitC-1</text>
+  <circle cx="650" cy="190" r="8" fill="#ef4444"/><text x="680" y="196" class="label" fill="#ffffff">3V3</text>
+  <circle cx="650" cy="270" r="8" fill="#eab308"/><text x="680" y="276" class="label" fill="#ffffff">GPIO 4</text>
+  <circle cx="650" cy="350" r="8" fill="#1f2937" stroke="#ffffff" stroke-width="2"/><text x="680" y="356" class="label" fill="#ffffff">GND</text>
+
+  <path d="M383 190 H642" class="wire" stroke="#ef4444"/>
+  <path d="M383 270 H642" class="wire" stroke="#eab308"/>
+  <path d="M383 350 H642" class="wire" stroke="#1f2937"/>
+  <text x="500" y="510" text-anchor="middle" class="note">VCC → 3V3    DATA/OUT/S → GPIO 4    GND → GND</text>
+  <text x="500" y="538" text-anchor="middle" class="note">Do not infer pin order from the module's physical orientation.</text>
+</svg>
