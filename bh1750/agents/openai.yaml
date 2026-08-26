@@ -1,0 +1,4 @@
+interface:
+  display_name: "ESP32 BH1750 + Zero MQTT"
+  short_description: "Wire, flash, and view a secure BH1750 lux monitor"
+  default_prompt: "Use $esp32-bh1750-cloudflare to guide me from wiring an ESP32-C6 and BH1750FVI through Zero MQTT provisioning, flashing, and a local or remote dashboard."

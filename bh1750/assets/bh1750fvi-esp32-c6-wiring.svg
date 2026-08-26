@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title description">
+  <title id="title">BH1750FVI module connected to an ESP32-C6-DevKitC-1</title>
+  <desc id="description">Connect module VCC to ESP32 5V, SDA or DAT to GPIO 6, SCL to GPIO 7, GND to GND, and leave ADDR grounded or unconnected for address 0x23.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #172033; }
+    .heading { font-size: 30px; font-weight: 700; }
+    .label { font-size: 20px; font-weight: 650; }
+    .note { font-size: 17px; fill: #526078; }
+    .wire { fill: none; stroke-width: 8; stroke-linecap: round; }
+  </style>
+  <rect width="1000" height="620" rx="24" fill="#f8fafc"/>
+  <text x="500" y="52" text-anchor="middle" class="heading">ESP32-C6 + BH1750FVI module wiring</text>
+
+  <rect x="90" y="110" width="285" height="390" rx="24" fill="#2563eb" stroke="#1e3a8a" stroke-width="3"/>
+  <rect x="145" y="160" width="175" height="135" rx="15" fill="#111827" stroke="#93c5fd" stroke-width="3"/>
+  <circle cx="232" cy="226" r="27" fill="#dbeafe" stroke="#64748b" stroke-width="3"/>
+  <text x="232" y="418" text-anchor="middle" class="label" fill="#ffffff">BH1750FVI module</text>
+  <text x="232" y="451" text-anchor="middle" class="note" fill="#dbeafe">Use the printed labels</text>
+  <circle cx="375" cy="155" r="8" fill="#ef4444"/><text x="345" y="161" text-anchor="end" class="label" fill="#ffffff">VCC</text>
+  <circle cx="375" cy="230" r="8" fill="#eab308"/><text x="345" y="236" text-anchor="end" class="label" fill="#ffffff">SDA/DAT</text>
+  <circle cx="375" cy="305" r="8" fill="#22c55e"/><text x="345" y="311" text-anchor="end" class="label" fill="#ffffff">SCL</text>
+  <circle cx="375" cy="380" r="8" fill="#1f2937" stroke="#ffffff" stroke-width="2"/><text x="345" y="386" text-anchor="end" class="label" fill="#ffffff">GND</text>
+
+  <rect x="650" y="95" width="260" height="430" rx="24" fill="#172033" stroke="#0b1020" stroke-width="3"/>
+  <rect x="714" y="110" width="132" height="58" rx="8" fill="#cbd5e1"/>
+  <rect x="750" y="235" width="125" height="150" rx="12" fill="#34445f" stroke="#94a3b8" stroke-width="2"/>
+  <text x="812" y="295" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">ESP32-C6</text>
+  <text x="812" y="328" text-anchor="middle" font-size="16" fill="#dbeafe">DevKitC-1</text>
+  <circle cx="650" cy="155" r="8" fill="#ef4444"/><text x="680" y="161" class="label" fill="#ffffff">5V</text>
+  <circle cx="650" cy="230" r="8" fill="#eab308"/><text x="680" y="236" class="label" fill="#ffffff">GPIO 6</text>
+  <circle cx="650" cy="305" r="8" fill="#22c55e"/><text x="680" y="311" class="label" fill="#ffffff">GPIO 7</text>
+  <circle cx="650" cy="380" r="8" fill="#1f2937" stroke="#ffffff" stroke-width="2"/><text x="680" y="386" class="label" fill="#ffffff">GND</text>
+
+  <path d="M383 155 H642" class="wire" stroke="#ef4444"/>
+  <path d="M383 230 H642" class="wire" stroke="#eab308"/>
+  <path d="M383 305 H642" class="wire" stroke="#22c55e"/>
+  <path d="M383 380 H642" class="wire" stroke="#1f2937"/>
+  <text x="500" y="562" text-anchor="middle" class="note">VCC → 5V    SDA/DAT → GPIO 6    SCL → GPIO 7    GND → GND</text>
+  <text x="500" y="592" text-anchor="middle" class="note">ADDR/ADD → GND or unconnected (0x23). I2C logic must remain 3.3V.</text>
+</svg>

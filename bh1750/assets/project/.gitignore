@@ -1,0 +1,4 @@
+.env
+secrets.h
+web/public/mqtt-config.js
+.wrangler/
