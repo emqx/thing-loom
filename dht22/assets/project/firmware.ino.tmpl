@@ -1,0 +1,122 @@
+#include <DHT.h>
+#include <NetworkClientSecure.h>
+#include <PubSubClient.h>
+#include <WiFi.h>
+#include <time.h>
+
+#include "secrets.h"
+
+constexpr uint8_t DHT_PIN = __DHT_PIN__;
+constexpr uint32_t PUBLISH_INTERVAL_MS = 5000;
+constexpr float TEMPERATURE_OFFSET = 0.0;
+constexpr float HUMIDITY_OFFSET = 0.0;
+constexpr char MQTT_TOPIC[] = "__MQTT_TOPIC__";
+
+extern const uint8_t x509_crt_bundle_start[] asm("_binary_x509_crt_bundle_start");
+extern const uint8_t x509_crt_bundle_end[] asm("_binary_x509_crt_bundle_end");
+
+DHT dht(DHT_PIN, DHT22);
+NetworkClientSecure network;
+PubSubClient mqtt(network);
+uint32_t lastPublish = 0;
+
+bool connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) return true;
+
+  Serial.printf("Connecting to Wi-Fi %s", WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  const uint32_t started = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - started < 20000) {
+    delay(500);
+    Serial.print('.');
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf(" connected, IP: %s\n", WiFi.localIP().toString().c_str());
+    return true;
+  }
+
+  Serial.println(" timed out");
+  WiFi.disconnect();
+  const int count = WiFi.scanNetworks();
+  bool found = false;
+  for (int i = 0; i < count; ++i) {
+    if (WiFi.SSID(i) == WIFI_SSID) {
+      Serial.printf("SSID found, RSSI: %d dBm; check password/security settings\n", WiFi.RSSI(i));
+      found = true;
+      break;
+    }
+  }
+  if (!found) Serial.println("SSID not visible; enable its 2.4 GHz network");
+  WiFi.scanDelete();
+  return false;
+}
+
+bool syncClock() {
+  if (time(nullptr) > 1700000000) return true;
+
+  Serial.print("Synchronizing clock");
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  const uint32_t started = millis();
+  while (time(nullptr) <= 1700000000 && millis() - started < 15000) {
+    delay(500);
+    Serial.print('.');
+  }
+  const bool synced = time(nullptr) > 1700000000;
+  Serial.println(synced ? " synchronized" : " timed out");
+  return synced;
+}
+
+void connectMQTT() {
+  while (!mqtt.connected()) {
+    const String clientId = "esp32-c6-dht22-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+    Serial.printf("Connecting to MQTT as %s... ", clientId.c_str());
+    if (mqtt.connect(clientId.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
+      Serial.println("connected");
+    } else {
+      Serial.printf("failed (state %d), retrying\n", mqtt.state());
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  network.setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+void loop() {
+  if (!connectWiFi()) {
+    delay(2000);
+    return;
+  }
+  if (!syncClock()) {
+    delay(2000);
+    return;
+  }
+  connectMQTT();
+  mqtt.loop();
+
+  const uint32_t now = millis();
+  if (now - lastPublish < PUBLISH_INTERVAL_MS) return;
+  lastPublish = now;
+
+  const float humidity = dht.readHumidity() + HUMIDITY_OFFSET;
+  const float temperature = dht.readTemperature() + TEMPERATURE_OFFSET;
+  if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("DHT22 read failed");
+    return;
+  }
+
+  char payload[64];
+  snprintf(payload, sizeof(payload), "{\"temperature\":%.1f,\"humidity\":%.1f}",
+           temperature, humidity);
+  if (mqtt.publish(MQTT_TOPIC, payload, true)) {
+    Serial.printf("Published %s -> %s\n", MQTT_TOPIC, payload);
+  } else {
+    Serial.println("MQTT publish failed");
+  }
+}

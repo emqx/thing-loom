@@ -1,0 +1,38 @@
+---
+name: replace-me
+description: "REPLACE_ME: describe the exact hardware outcome and when this skill should be used."
+---
+
+# REPLACE_ME
+
+REPLACE_ME: State the end-to-end outcome and the observable evidence required
+before the task is complete.
+
+## Before starting
+
+- Confirm the exact board, sensor, wiring, and data-capable connection.
+- Ask only for choices that materially change the result.
+- Collect passwords and tokens through hidden local prompts, never through chat.
+- Explain and request approval immediately before creating external resources.
+
+## Workflow
+
+1. Inspect the repository, connected hardware, and installed toolchain. Reuse an existing generated project when possible.
+2. Install only missing dependencies and request approval when installation or network access requires it.
+3. Generate customer files under an ignored local output directory. Never overwrite an existing project.
+4. Compile and flash the confirmed hardware target.
+5. Require a real, finite sensor reading from the device before continuing.
+6. Verify independently that the message reached its destination.
+7. Open the final interface and verify that it shows the same live data.
+
+## Safety
+
+- Use authenticated encrypted transport.
+- Store credentials in ignored files with restrictive permissions.
+- Never print, commit, or embed credentials in literal command text; prefer hidden prompts or protected configuration files.
+- Stop after an ambiguous external-creation timeout; do not create a duplicate resource automatically.
+
+## Completion
+
+Return the project path, final interface, observed reading, resource lifecycle,
+and any unresolved hardware limitation. Never return credentials.

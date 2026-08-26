@@ -1,0 +1,4 @@
+interface:
+  display_name: "ESP32 DHT22 + Zero MQTT"
+  short_description: "Wire, flash, and view a secure DHT22 monitor"
+  default_prompt: "Use $esp32-dht22-cloudflare to guide me from wiring an ESP32-C6 and DHT22 through Zero MQTT provisioning, flashing, and a local or remote dashboard."
