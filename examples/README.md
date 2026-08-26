@@ -54,4 +54,4 @@ when the implementation uses them.
 - Keep the English and Chinese user guides equivalent.
 - Review the staged diff for credentials, then run the tests you added and `git diff --check` before submitting.
 
-The [DHT22 skill](../dht22/) is the first complete example.
+The [DHT22](../dht22/) and [BH1750FVI](../bh1750/) skills are complete examples.

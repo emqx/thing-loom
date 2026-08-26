@@ -30,10 +30,11 @@ One prompt
   -> store and explore history (TODO)
 ```
 
-## Try the first project
+## Try a project
 
-The first end-to-end skill builds an ESP32-C6 + DHT22 temperature and humidity
-monitor:
+Start with either verified end-to-end skill:
+
+### Temperature and humidity
 
 ```sh
 git clone https://github.com/emqx/thing-loom.git
@@ -51,6 +52,22 @@ The skill takes the project through wiring, Zero EMQX provisioning, firmware
 compilation and flashing, MQTT verification, and a local or remote live
 dashboard. See the [DHT22 project](dht22/README.md) for hardware and security
 details.
+
+### Ambient light
+
+```sh
+cd thing-loom/bh1750
+codex
+```
+
+Then ask:
+
+```text
+Build me an ambient-light monitor.
+```
+
+The [BH1750FVI project](bh1750/README.md) follows the same verified path and
+publishes real illuminance readings in lux.
 
 ## The toolchain
 
@@ -73,9 +90,10 @@ details.
 ## Roadmap
 
 - [x] ESP32-C6 + DHT22 -> secure MQTT -> live dashboard
+- [x] ESP32-C6 + BH1750FVI -> secure MQTT -> live dashboard
 - [ ] MQTT -> EMQX Tables time-series storage
 - [ ] Historical charts, alerts, and long-running smart-home deployments
-- [ ] More sensors after the first path is repeatable
+- [ ] More verified sensor skills
 
 ## Build our intelligent world together
 
