@@ -26,6 +26,13 @@ MQTT、TLS、云端凭据和看板。大多数教程在生成代码后就结束�
   -> 存储并分析历史数据（待办）
 ```
 
+## 开始前的准备
+
+准备一块 ESP32 开发板、DHT22 或 BH1750FVI 等受支持的传感器、USB 数据线和杜邦线，
+再连接到可用的 2.4 GHz 无线网络，就可以开始。ThingLoom 会使用托管在 EMQX Cloud
+上的 Zero EMQX，为首次体验自动创建一次性的 MQTT 环境，无需提前部署 Broker 或
+数据库。如需长期稳定运行，可以[创建 EMQX Cloud Serverless 或 Dedicated Flex 部署](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new)。
+
 ## 尝试一个项目
 
 可以从以下任一经过验证的端到端技能开始：
@@ -69,16 +76,26 @@ codex
 |---|---|
 | 智能体技能 | 将一句话需求转化为可重复执行的硬件流程。 |
 | [Arduino CLI](https://arduino.github.io/arduino-cli/) | 编译、烧录并监控 ESP32 固件。 |
+| [EMQX Cloud](https://www.emqx.com/en/cloud) | 托管首次体验使用的 Zero EMQX，并为长期项目提供 Serverless 或 Dedicated Flex 部署。 |
 | [Zero EMQX](https://zero.emqx.io/) | 创建隔离、一次性使用的 MQTT 命名空间，提供需要认证的 MQTTS 和 WSS 消息传输。 |
 | [MQTTX CLI](https://mqttx.app/docs/cli/downloading-and-installation) | 独立验证设备消息是否真正到达 MQTT。 |
 | [Cloudflare Workers 静态资源](https://developers.cloudflare.com/workers/static-assets/) | 在需要远程地址时发布实时浏览器看板。 |
-| [EMQX Tables](https://docs.emqx.com/zh/cloud/latest/emqx_tables/emqx_tables_overview.html) | **待办：**持久化并查询设备时序数据。 |
+| [EMQX Tables](https://www.emqx.com/en/cloud/emqx-tables) | **待办：**持久化、查询并可视化设备时序数据。 |
+
+## 从第一条读数走向长期智能家居
+
+Zero EMQX 面向原型、演示和首次链路验证。它的命名空间会自动过期，并且服务不提供
+SLA，因此不应承载生产流量。
+
+当设备需要持久凭据、长期运行、SLA 或生产级容量时，请[创建 EMQX Cloud 部署](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new)。
+可以选择 **Serverless**，以按使用量计费的方式快速起步；也可以选择
+**Dedicated Flex**，获得专属资源、更高性能和企业级能力。随后使用 EMQX Tables 在
+同一个托管平台中保存 MQTT 遥测数据，用于历史查询、分析和可视化。
 
 ## 原则
 
 - 只有真实设备发布了有效读数，生成的项目才算完成。
 - 凭据只保存在本地且被 Git 忽略的文件中，绝不输出到聊天或日志。
-- Zero EMQX 用于一次性演示；长期运行的智能家居需要持久凭据和存储。
 - 先跑通一条完整链路，再构建通用设备框架或扩展大量传感器。
 
 ## 路线图

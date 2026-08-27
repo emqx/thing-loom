@@ -30,6 +30,15 @@ One prompt
   -> store and explore history (TODO)
 ```
 
+## Before you start
+
+Bring an ESP32 development board, a supported sensor such as a DHT22 or
+BH1750FVI, a USB data cable, jumper wires, and access to a 2.4 GHz Wi-Fi network.
+That is enough to begin: ThingLoom uses Zero EMQX, hosted on EMQX Cloud, to
+provision a disposable MQTT environment for the first demo, so you do not need
+to deploy a broker or database beforehand. For reliable long-term operation,
+[create an EMQX Cloud Serverless or Dedicated Flex deployment](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new).
+
 ## Try a project
 
 Start with either verified end-to-end skill:
@@ -75,16 +84,29 @@ publishes real illuminance readings in lux.
 |---|---|
 | Agent Skills | Turn a prompt into a repeatable hardware workflow. |
 | [Arduino CLI](https://arduino.github.io/arduino-cli/) | Compile, flash, and monitor ESP32 firmware. |
+| [EMQX Cloud](https://www.emqx.com/en/cloud) | Host Zero EMQX for the first demo and provide Serverless or Dedicated Flex deployments for long-running projects. |
 | [Zero EMQX](https://zero.emqx.io/) | Create an isolated, disposable MQTT namespace with authenticated MQTTS and WSS transport. |
 | [MQTTX CLI](https://mqttx.app/docs/cli/downloading-and-installation) | Independently verify that the device message reached MQTT. |
 | [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) | Publish the live browser dashboard when a remote URL is requested. |
-| [EMQX Tables](https://docs.emqx.com/en/cloud/latest/emqx_tables/emqx_tables_overview.html) | **TODO:** persist and query device telemetry as time-series data. |
+| [EMQX Tables](https://www.emqx.com/en/cloud/emqx-tables) | **TODO:** persist, query, and visualize device telemetry as time-series data. |
+
+## From a first reading to a lasting smart home
+
+Zero EMQX is designed for prototypes, demos, and first-run validation. Its
+namespaces expire automatically and the service provides no SLA, so it should
+not carry production traffic.
+
+When your device needs persistent credentials, long-term operation, an SLA, or
+production capacity, [create an EMQX Cloud deployment](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new).
+Choose **Serverless** for a simple usage-based start, or **Dedicated Flex** for
+dedicated resources, higher performance, and enterprise capabilities. EMQX
+Tables then keeps MQTT telemetry in the same managed platform for historical
+queries, analytics, and visualization.
 
 ## Principles
 
 - A generated project is not complete until a real device publishes a valid reading.
 - Credentials stay in local, Git-ignored files and are never printed in chat or logs.
-- Zero EMQX is for disposable demos; persistent smart-home deployments need durable credentials and storage.
 - One proven vertical slice comes before a generic device framework or a catalog of sensors.
 
 ## Roadmap
