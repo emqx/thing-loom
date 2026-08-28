@@ -34,10 +34,10 @@ One prompt
 
 Bring an ESP32 development board, a supported sensor such as a DHT22 or
 BH1750FVI, a USB data cable, jumper wires, and access to a 2.4 GHz Wi-Fi network.
-That is enough to begin: ThingLoom uses Zero EMQX, hosted on EMQX Cloud, to
-provision a disposable MQTT environment for the first demo, so you do not need
-to deploy a broker or database beforehand. For reliable long-term operation,
-[create an EMQX Cloud Serverless or Dedicated Flex deployment](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new).
+That is enough to begin. Choose the disposable Zero EMQX environment for a
+quick demo, or connect your own MQTT broker for an existing deployment. If you
+need a reliable long-term broker but do not have one, [create an EMQX Cloud
+Serverless or Dedicated Flex deployment](https://www.emqx.com/en/cloud).
 
 ## Try a project
 
@@ -57,7 +57,7 @@ Then ask:
 Build me a temperature and humidity monitor.
 ```
 
-The skill takes the project through wiring, Zero EMQX provisioning, firmware
+The skill takes the project through wiring, broker setup, firmware
 compilation and flashing, MQTT verification, and a local or remote live
 dashboard. See the [DHT22 project](dht22/README.md) for hardware and security
 details.
@@ -84,7 +84,7 @@ publishes real illuminance readings in lux.
 |---|---|
 | Agent Skills | Turn a prompt into a repeatable hardware workflow. |
 | [Arduino CLI](https://arduino.github.io/arduino-cli/) | Compile, flash, and monitor ESP32 firmware. |
-| [EMQX Cloud](https://www.emqx.com/en/cloud) | Host Zero EMQX for the first demo and provide Serverless or Dedicated Flex deployments for long-running projects. |
+| [EMQX Cloud](https://www.emqx.com/en/cloud) | Create a managed Serverless or Dedicated Flex broker when you do not already have one. |
 | [Zero EMQX](https://zero.emqx.io/) | Create an isolated, disposable MQTT namespace with authenticated MQTTS and WSS transport. |
 | [MQTTX CLI](https://mqttx.app/docs/cli/downloading-and-installation) | Independently verify that the device message reached MQTT. |
 | [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) | Publish the live browser dashboard when a remote URL is requested. |
@@ -97,7 +97,7 @@ namespaces expire automatically and the service provides no SLA, so it should
 not carry production traffic.
 
 When your device needs persistent credentials, long-term operation, an SLA, or
-production capacity, [create an EMQX Cloud deployment](https://accounts.emqx.com/signup?continue=https://cloud-intl.emqx.com/console/deployments/new).
+production capacity, use your own broker or [create an EMQX Cloud deployment](https://www.emqx.com/en/cloud).
 Choose **Serverless** for a simple usage-based start, or **Dedicated Flex** for
 dedicated resources, higher performance, and enterprise capabilities. EMQX
 Tables then keeps MQTT telemetry in the same managed platform for historical

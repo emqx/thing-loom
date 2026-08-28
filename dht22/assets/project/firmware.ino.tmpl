@@ -1,5 +1,5 @@
 #include <DHT.h>
-#include <NetworkClientSecure.h>
+#include <__NETWORK_HEADER__>
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <time.h>
@@ -12,11 +12,10 @@ constexpr float TEMPERATURE_OFFSET = 0.0;
 constexpr float HUMIDITY_OFFSET = 0.0;
 constexpr char MQTT_TOPIC[] = "__MQTT_TOPIC__";
 
-extern const uint8_t x509_crt_bundle_start[] asm("_binary_x509_crt_bundle_start");
-extern const uint8_t x509_crt_bundle_end[] asm("_binary_x509_crt_bundle_end");
+__TLS_DECLARATIONS__
 
 DHT dht(DHT_PIN, DHT22);
-NetworkClientSecure network;
+__NETWORK_CLASS__ network;
 PubSubClient mqtt(network);
 uint32_t lastPublish = 0;
 
@@ -84,7 +83,7 @@ void setup() {
   dht.begin();
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
-  network.setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
+  __TLS_SETUP__
   mqtt.setServer(MQTT_HOST, MQTT_PORT);
 }
 
@@ -93,10 +92,7 @@ void loop() {
     delay(2000);
     return;
   }
-  if (!syncClock()) {
-    delay(2000);
-    return;
-  }
+  __CLOCK_GUARD__
   connectMQTT();
   mqtt.loop();
 

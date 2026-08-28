@@ -8,9 +8,12 @@ import re
 import secrets
 import shlex
 import shutil
+import subprocess
+import tempfile
 from datetime import date
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 
@@ -65,6 +68,113 @@ def provision_zero(lifecycle: str) -> dict:
     return instance
 
 
+def prompt_custom_broker(parser: argparse.ArgumentParser, delivery: str) -> dict:
+    host = input("MQTT broker host: ").strip()
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+    if not host or any(char.isspace() or char in "/?#@" for char in host):
+        parser.error("MQTT broker host must be a hostname or IP address without a URL scheme")
+    try:
+        port = int(input("MQTT port: "))
+    except ValueError:
+        parser.error("MQTT port must be an integer")
+    if not 1 <= port <= 65535:
+        parser.error("MQTT port must be between 1 and 65535")
+    protocol = input("MQTT protocol [mqtts/mqtt] (mqtts): ").strip().lower() or "mqtts"
+    if protocol not in ("mqtt", "mqtts"):
+        parser.error("MQTT protocol must be mqtt or mqtts")
+    if protocol == "mqtt":
+        print("Warning: mqtt sends broker credentials and telemetry without TLS encryption")
+    username = input("MQTT username: ")
+    password = getpass.getpass("MQTT password: ")
+    if not username or not password or "\0" in username or "\0" in password:
+        parser.error("MQTT username and password are required and cannot contain NUL bytes")
+    websocket_url = input("MQTT WebSocket URL (ws:// or wss://): ").strip()
+    try:
+        websocket = urlsplit(websocket_url)
+        websocket.port
+    except ValueError:
+        parser.error("MQTT WebSocket URL has an invalid port")
+    if websocket.scheme not in ("ws", "wss") or not websocket.hostname or websocket.fragment:
+        parser.error("MQTT WebSocket URL must be a valid ws:// or wss:// URL without a fragment")
+    if delivery == "remote" and websocket.scheme != "wss":
+        parser.error("remote dashboards require a wss:// MQTT WebSocket URL")
+    if websocket.scheme == "ws":
+        print("Warning: ws sends dashboard credentials and telemetry without TLS encryption")
+    uri_host = f"[{host}]" if ":" in host else host
+    return {
+        "host": host,
+        "port": port,
+        "protocol": protocol,
+        "uri": f"{protocol}://{uri_host}:{port}",
+        "websocket_uri": websocket_url,
+        "username": username,
+        "password": password,
+    }
+
+
+def validate_custom_broker(parser: argparse.ArgumentParser, broker: dict) -> None:
+    mqttx = shutil.which("mqttx")
+    if not mqttx:
+        parser.error("MQTTX CLI is required to validate a custom broker before generation")
+    websocket = urlsplit(broker["websocket_uri"])
+    websocket_path = websocket.path or "/"
+    if websocket.query:
+        websocket_path += f"?{websocket.query}"
+    endpoints = (
+        ("device MQTT", broker["host"], broker["port"], broker["protocol"], "/mqtt"),
+        (
+            "dashboard WebSocket",
+            websocket.hostname,
+            websocket.port or (443 if websocket.scheme == "wss" else 80),
+            websocket.scheme,
+            websocket_path,
+        ),
+    )
+    for label, host, port, protocol, path in endpoints:
+        options = {
+            "conn": {
+                "mqttVersion": 4,
+                "hostname": host,
+                "port": port,
+                "clientId": f"thing-loom-check-{secrets.token_hex(4)}",
+                "clean": True,
+                "keepalive": 30,
+                "username": broker["username"],
+                "password": broker["password"],
+                "protocol": protocol,
+                "path": path,
+                "reconnectPeriod": 0,
+                "maximumReconnectTimes": 0,
+                "reqProblemInfo": True,
+                "debug": False,
+            }
+        }
+        with tempfile.NamedTemporaryFile("w", prefix="thing-loom-mqttx-", suffix=".json") as config:
+            json.dump(options, config)
+            config.flush()
+            try:
+                result = subprocess.run(
+                    [mqttx, "conn", "--load-options", config.name],
+                    capture_output=True,
+                    text=True,
+                    timeout=8,
+                    check=False,
+                )
+                output = result.stdout + result.stderr
+            except subprocess.TimeoutExpired as error:
+                stdout = error.stdout or ""
+                stderr = error.stderr or ""
+                if isinstance(stdout, bytes):
+                    stdout = stdout.decode(errors="replace")
+                if isinstance(stderr, bytes):
+                    stderr = stderr.decode(errors="replace")
+                output = stdout + stderr
+        if "Connected" not in output:
+            parser.error(f"MQTTX could not connect to the custom broker's {label} endpoint")
+        print(f"MQTTX validated custom broker {label} endpoint")
+
+
 def env_line(name: str, value: object) -> str:
     return f"{name}={shlex.quote(str(value))}\n"
 
@@ -82,6 +192,7 @@ def main() -> None:
     parser.add_argument("--sda", type=int, default=6)
     parser.add_argument("--scl", type=int, default=7)
     parser.add_argument("--delivery", choices=("local", "remote"), default="local")
+    parser.add_argument("--broker", choices=("zero", "custom"), default="zero")
     parser.add_argument("--zero-lifecycle", choices=("fixed_ttl", "idle_ttl"), default="idle_ttl")
     args = parser.parse_args()
 
@@ -105,20 +216,31 @@ def main() -> None:
     if not ssid or not password:
         parser.error("Wi-Fi SSID and password are required")
 
+    instance = None
+    if args.broker == "custom":
+        broker = prompt_custom_broker(parser, args.delivery)
+        validate_custom_broker(parser, broker)
+
     cloudflare_api_token = ""
     if args.delivery == "remote":
         cloudflare_api_token = getpass.getpass("Cloudflare API token: ")
         if not cloudflare_api_token:
             parser.error("Cloudflare API token is required for remote delivery")
 
-    try:
-        instance = provision_zero(args.zero_lifecycle)
-    except RuntimeError as error:
-        parser.error(str(error))
-
-    mqtts = instance["mqtts"]
-    wss = instance["wss"]
-    mqtt_credentials = instance["credentials"]
+    if args.broker == "zero":
+        try:
+            instance = provision_zero(args.zero_lifecycle)
+        except RuntimeError as error:
+            parser.error(str(error))
+        mqtts = instance["mqtts"]
+        broker = {
+            "host": mqtts["host"],
+            "port": mqtts["port"],
+            "protocol": "mqtts",
+            "uri": mqtts["uri"],
+            "websocket_uri": instance["wss"]["uri"],
+            **instance["credentials"],
+        }
 
     args.output.mkdir(parents=True)
     shutil.copytree(TEMPLATE_DIR / "web", args.output / "web")
@@ -130,6 +252,21 @@ def main() -> None:
         "__COMPATIBILITY_DATE__": date.today().isoformat(),
         "__SDA_PIN__": str(args.sda),
         "__SCL_PIN__": str(args.scl),
+        "__NETWORK_HEADER__": "NetworkClientSecure.h" if broker["protocol"] == "mqtts" else "NetworkClient.h",
+        "__NETWORK_CLASS__": "NetworkClientSecure" if broker["protocol"] == "mqtts" else "NetworkClient",
+        "__TLS_DECLARATIONS__": (
+            'extern const uint8_t x509_crt_bundle_start[] asm("_binary_x509_crt_bundle_start");\n'
+            'extern const uint8_t x509_crt_bundle_end[] asm("_binary_x509_crt_bundle_end");'
+            if broker["protocol"] == "mqtts" else ""
+        ),
+        "__TLS_SETUP__": (
+            "network.setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);"
+            if broker["protocol"] == "mqtts" else ""
+        ),
+        "__CLOCK_GUARD__": (
+            "if (!syncClock()) {\n    delay(2000);\n    return;\n  }"
+            if broker["protocol"] == "mqtts" else ""
+        ),
     }
     firmware = (TEMPLATE_DIR / "firmware.ino.tmpl").read_text()
     for old, new in replacements.items():
@@ -148,10 +285,10 @@ def main() -> None:
         "#pragma once\n\n"
         f"const char WIFI_SSID[] = {json.dumps(ssid, ensure_ascii=False)};\n"
         f"const char WIFI_PASSWORD[] = {json.dumps(password, ensure_ascii=False)};\n"
-        f"const char MQTT_HOST[] = {json.dumps(mqtts['host'])};\n"
-        f"const uint16_t MQTT_PORT = {mqtts['port']};\n"
-        f"const char MQTT_USERNAME[] = {json.dumps(mqtt_credentials['username'])};\n"
-        f"const char MQTT_PASSWORD[] = {json.dumps(mqtt_credentials['password'])};\n",
+        f"const char MQTT_HOST[] = {json.dumps(broker['host'])};\n"
+        f"const uint16_t MQTT_PORT = {broker['port']};\n"
+        f"const char MQTT_USERNAME[] = {json.dumps(broker['username'])};\n"
+        f"const char MQTT_PASSWORD[] = {json.dumps(broker['password'])};\n",
     )
 
     write_secret(
@@ -159,9 +296,9 @@ def main() -> None:
         "window.MQTT_CONFIG = Object.freeze("
         + json.dumps(
             {
-                "url": wss["uri"],
-                "username": mqtt_credentials["username"],
-                "password": mqtt_credentials["password"],
+                "url": broker["websocket_uri"],
+                "username": broker["username"],
+                "password": broker["password"],
                 "topic": topic,
             },
             separators=(",", ":"),
@@ -173,29 +310,35 @@ def main() -> None:
         args.output / ".env",
         "# Generated locally. Do not commit or share this file.\n"
         + env_line("DELIVERY", args.delivery)
+        + env_line("BROKER_SOURCE", args.broker)
         + env_line("WIFI_SSID", ssid)
         + env_line("WIFI_PASSWORD", password)
-        + env_line("ZERO_INSTANCE_ID", instance["instance_id"])
-        + env_line("ZERO_LIFECYCLE", instance["lifecycle"])
-        + env_line("ZERO_EXPIRES_AT", instance.get("expires_at") or "")
-        + env_line("ZERO_IDLE_TTL_SECONDS", instance.get("idle_ttl_seconds") or "")
-        + env_line("MQTT_HOST", mqtts["host"])
-        + env_line("MQTT_PORT", mqtts["port"])
-        + env_line("MQTT_MQTTS_URI", mqtts["uri"])
-        + env_line("MQTT_WSS_URI", wss["uri"])
-        + env_line("MQTT_USERNAME", mqtt_credentials["username"])
-        + env_line("MQTT_PASSWORD", mqtt_credentials["password"])
+        + env_line("ZERO_INSTANCE_ID", instance["instance_id"] if instance else "")
+        + env_line("ZERO_LIFECYCLE", instance["lifecycle"] if instance else "")
+        + env_line("ZERO_EXPIRES_AT", (instance.get("expires_at") or "") if instance else "")
+        + env_line("ZERO_IDLE_TTL_SECONDS", (instance.get("idle_ttl_seconds") or "") if instance else "")
+        + env_line("MQTT_HOST", broker["host"])
+        + env_line("MQTT_PORT", broker["port"])
+        + env_line("MQTT_PROTOCOL", broker["protocol"])
+        + env_line("MQTT_URI", broker["uri"])
+        + env_line("MQTT_MQTTS_URI", broker["uri"] if broker["protocol"] == "mqtts" else "")
+        + env_line("MQTT_WSS_URI", broker["websocket_uri"])
+        + env_line("MQTT_USERNAME", broker["username"])
+        + env_line("MQTT_PASSWORD", broker["password"])
         + env_line("MQTT_TOPIC", topic)
         + env_line("CLOUDFLARE_API_TOKEN", cloudflare_api_token),
     )
     print(f"Project: {args.output.resolve()}")
-    print(f"Zero EMQX instance: {instance['instance_id']}")
-    print(f"MQTTS endpoint: {mqtts['uri']}")
-    print(f"WSS endpoint: {wss['uri']}")
-    if instance.get("expires_at"):
-        print(f"Expires at: {instance['expires_at']}")
-    else:
-        print(f"Idle TTL: {instance['idle_ttl_seconds']} seconds")
+    print(f"Broker: {'Zero EMQX' if instance else 'custom'}")
+    if instance:
+        print(f"Zero EMQX instance: {instance['instance_id']}")
+    print(f"MQTT endpoint: {broker['uri']}")
+    print(f"WebSocket endpoint: {broker['websocket_uri']}")
+    if instance:
+        if instance.get("expires_at"):
+            print(f"Expires at: {instance['expires_at']}")
+        else:
+            print(f"Idle TTL: {instance['idle_ttl_seconds']} seconds")
     print(f"MQTT topic: {topic}")
     print(f"Worker name: {worker}")
 
