@@ -3,7 +3,7 @@
 [Chinese version](README.zh-CN.md)
 
 This skill builds a complete ESP32-C6 and three-pin DHT22 project: wiring,
-project generation, a disposable Zero EMQX namespace, firmware flashing,
+project generation, Zero EMQX or custom MQTT broker setup, firmware flashing,
 serial verification, and a local or Cloudflare-hosted live dashboard.
 
 ## Usage
@@ -27,12 +27,12 @@ The agent will:
 
 1. Confirm the ESP32 is connected with a data-capable USB cable and the DHT22 is wired correctly.
 2. Collect the Wi-Fi password only through a hidden local terminal prompt, never through chat.
-3. Ask whether the dashboard should be a local HTML file or a remote Cloudflare URL.
-4. For a remote URL, collect a least-privilege Cloudflare API token through the hidden prompt.
-5. With approval, create an isolated disposable Zero EMQX namespace tagged `emqx-thing-loom`.
-6. Generate, compile, and flash the firmware, then require a real sensor reading from the serial port.
-7. Use MQTTX CLI over MQTTS to verify that the message reached the broker.
-8. Open the dashboard and verify that it receives the same data over WSS.
+3. Ask whether to use a disposable Zero EMQX namespace or your own broker.
+4. For a custom broker, collect its MQTT and WebSocket connection details locally and validate both endpoints with MQTTX before writing project files.
+5. Ask whether the dashboard should be a local HTML file or a remote Cloudflare URL.
+6. For a remote URL, collect a least-privilege Cloudflare API token through the hidden prompt.
+7. Generate, compile, and flash the firmware, then require a real sensor reading from the serial port.
+8. Use MQTTX CLI to verify that the message reached the broker, then open the dashboard and verify the same data.
 
 ![DHT22 to ESP32-C6 wiring](assets/dht22-esp32-c6-wiring.svg)
 
@@ -50,19 +50,23 @@ physical pin order:
 - **Local HTML:** Open the generated `web/public/index.html`; no Cloudflare account is required.
 - **Remote URL:** Deploy the same page with Cloudflare Workers Static Assets. The API token is entered locally and stored in the Git-ignored `.env` file.
 
-A remote static page must receive the disposable Zero MQTT WSS credential, so
+A remote static page must receive an MQTT WSS credential, so
 a visitor can inspect it in the browser. This is suitable only for an isolated
 demo. Private or production dashboards require an authenticated backend and a
 non-disposable broker.
 
-## Credentials and lifecycle
+## Broker, credentials, and lifecycle
 
-Zero EMQX exposes authenticated MQTTS and WSS only. The scaffold writes the
-following values to `data/<project>/.env` with file mode `600`:
+The default uses Zero EMQX. Pass `--broker custom` to enter your broker host,
+device port and `mqtt`/`mqtts` protocol, username, hidden password, and its
+separate `ws://`/`wss://` dashboard URL. MQTTX validates both endpoints before
+the scaffold creates the output directory. Remote dashboards require `wss://`.
+The scaffold writes the following values to `data/<project>/.env` with file
+mode `600`:
 
 - Wi-Fi SSID and password
-- Zero instance ID, lifecycle, and MQTTS/WSS endpoints
-- MQTT username, one-time password, and topic
+- Broker source, protocol, MQTT/WebSocket endpoints, username, password, and topic
+- Zero instance ID and lifecycle when Zero EMQX is selected
 - Cloudflare API token for remote delivery
 
 All generated code stays under this sensor directory's `data/` folder. Its
@@ -95,6 +99,6 @@ arduino-cli core install esp32:esp32
 arduino-cli lib install "DHT sensor library" PubSubClient
 ```
 
-MQTTX must use `mqtts`, the TLS port returned by Zero, and the generated
-credentials. Never pass `--insecure`. The ESP32 firmware uses the system CA
-bundle and synchronizes its clock with NTP before the TLS handshake.
+MQTTX uses the selected protocol, port, and generated credentials. Never pass
+`--insecure`. With `mqtts`, the ESP32 firmware uses the system CA bundle and
+synchronizes its clock with NTP before the TLS handshake.

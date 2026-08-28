@@ -1,6 +1,6 @@
 ---
 name: esp32-dht22-cloudflare
-description: Guide a customer from wiring an ESP32-C6 and three-pin DHT22 through secure Zero EMQX provisioning, firmware flashing, and a local or Cloudflare-hosted live dashboard. Use for complete temperature-and-humidity builds from a cloned thing-loom sensor directory.
+description: Guide a customer from wiring an ESP32-C6 and three-pin DHT22 through Zero EMQX or custom MQTT broker setup, firmware flashing, and a local or Cloudflare-hosted live dashboard. Use for complete temperature-and-humidity builds from a cloned thing-loom sensor directory.
 ---
 
 # ESP32 DHT22 Dashboard
@@ -13,21 +13,24 @@ Ask in the customer's language and wait where physical confirmation or a deliver
 
 1. Confirm the ESP32 is connected to the Mac with a data-capable USB cable and the sensor is wired. Show [the DHT22 wiring diagram](assets/dht22-esp32-c6-wiring.svg): module `VCC` to `3V3`, `DATA/OUT/S` to GPIO 4, and `GND` to `GND`. Tell the customer to follow printed labels rather than physical pin order. Wait until they confirm.
 2. Tell the customer that the scaffold will prompt locally for the Wi-Fi SSID and password. Collect the password only through its hidden terminal prompt, never in chat or a command argument. If the agent cannot give the customer direct access to that prompt, give them the exact scaffold command to run in their own terminal and wait for completion; do not try terminal UI automation or request credentials in chat.
-3. Ask for one dashboard delivery:
+3. Ask for one broker:
+   - **Zero EMQX:** default; provisions an isolated disposable namespace automatically.
+   - **Custom broker:** the scaffold locally prompts for its host, device port and `mqtt`/`mqtts` protocol, username, hidden password, and separate `ws://`/`wss://` dashboard URL. It validates both endpoints with MQTTX before writing any project files. Recommend `mqtts` and `wss`; the ESP32 requires a publicly trusted server certificate for `mqtts`.
+4. Ask for one dashboard delivery:
    - **Local HTML:** default; no Cloudflare account, token, Wrangler, or deployment.
    - **Remote URL:** Cloudflare Workers Static Assets.
-4. For Remote URL, tell the customer that the scaffold will prompt locally for a least-privilege Cloudflare API token scoped to the target account. The token uses a hidden prompt. Never request or print a global API key.
-5. Explain Zero EMQX before creating it: this makes a disposable isolated MQTT namespace, uses authenticated MQTTS/WSS only, and returns its password once. Every provisioning request must use the fixed tag `emqx-thing-loom` so the Zero team can attribute usage. State the chosen lifecycle. Default to `idle_ttl`, which keeps the namespace while a device or dashboard is connected and deletes it after the returned idle duration with no connections; use `fixed_ttl` only when requested.
+5. For Remote URL, tell the customer that the scaffold will prompt locally for a least-privilege Cloudflare API token scoped to the target account. The token uses a hidden prompt. Never request or print a global API key. A custom broker must provide a `wss://` dashboard URL for remote delivery.
+6. For Zero EMQX, explain before creating it: this makes a disposable isolated MQTT namespace, uses authenticated MQTTS/WSS only, and returns its password once. Every provisioning request must use the fixed tag `emqx-thing-loom` so the Zero team can attribute usage. State the chosen lifecycle. Default to `idle_ttl`, which keeps the namespace while a device or dashboard is connected and deletes it after the returned idle duration with no connections; use `fixed_ttl` only when requested.
 
-Immediately before running the scaffold, tell the customer that it will call `POST https://zero.emqx.io/v1/instances` and write the Wi-Fi, MQTT, and any Cloudflare credentials to `data/<project>/.env` with mode `600`; the sensor directory ignores every `.env` and everything generated under `data/`. Ask for confirmation. Do not provision until they agree, and do not automatically retry an ambiguous timeout because a tenant may already have been created.
+Immediately before running the scaffold, tell the customer that it writes the Wi-Fi, MQTT, and any Cloudflare credentials to `data/<project>/.env` with mode `600`; the sensor directory ignores every `.env` and everything generated under `data/`. For Zero EMQX, also disclose that it calls `POST https://zero.emqx.io/v1/instances`; ask for confirmation, do not provision until they agree, and do not automatically retry an ambiguous timeout because a tenant may already have been created.
 
-For Remote URL, also disclose that a static browser dashboard must receive the disposable MQTT credential, so a visitor can inspect it. This is acceptable only for the isolated demo namespace. Use an authenticated backend and a non-disposable broker for private or production data.
+For Remote URL, also disclose that a static browser dashboard must receive the MQTT credential, so a visitor can inspect it. This is acceptable only for an isolated demo credential. Use an authenticated backend for private or production data.
 
 ## Inputs and hardware
 
 - Target `ESP32-C6-DevKitC-1`; confirm any different board before compiling.
-- Use the fixed topic `dht22/readings`; Zero EMQX isolates it between tenants. The scaffold creates a unique Worker name unless supplied.
-- Keep all generated customer code under this sensor directory's `data/` folder. If an existing generated project there has `.env`, reuse it and its Zero instance instead of provisioning another tenant. Never display or commit its values. On a resumed project, monitor the serial port first; a valid `Published` reading means the existing firmware can be reused without compiling or flashing again.
+- Use the fixed topic `dht22/readings`; Zero EMQX isolates it between tenants, while a custom broker must allow the supplied user to publish and subscribe to it. The scaffold creates a unique Worker name unless supplied.
+- Keep all generated customer code under this sensor directory's `data/` folder. If an existing generated project there has `.env`, reuse its broker configuration instead of provisioning or configuring another one. Never display or commit its values. On a resumed project, monitor the serial port first; a valid `Published` reading means the existing firmware can be reused without compiling or flashing again.
 
 ## Scaffold
 
@@ -36,9 +39,11 @@ After confirmation, run one of these from this skill:
 ```sh
 scripts/scaffold.py data/<project-name> --delivery local
 scripts/scaffold.py data/<project-name> --delivery remote
+scripts/scaffold.py data/<project-name> --broker custom --delivery local
+scripts/scaffold.py data/<project-name> --broker custom --delivery remote
 ```
 
-The script securely prompts for Wi-Fi credentials and, for Remote URL, a Cloudflare token. It provisions Zero EMQX, writes `.env`, and copies the project from `assets/project/`. Use `--worker-name`, `--pin`, or `--zero-lifecycle fixed_ttl` only when requested. Always choose an output under `data/`; do not overwrite an existing directory.
+The script securely prompts for Wi-Fi credentials and, for Remote URL, a Cloudflare token. The default provisions Zero EMQX. `--broker custom` prompts locally for the custom connection and requires MQTTX; it verifies the device and dashboard endpoints before creating the output directory. The script then writes `.env` and copies the project from `assets/project/`. Use `--worker-name`, `--pin`, or `--zero-lifecycle fixed_ttl` only when requested. Always choose an output under `data/`; do not overwrite an existing directory.
 
 ## Toolchain and device
 
@@ -74,10 +79,10 @@ The script securely prompts for Wi-Fi credentials and, for Remote URL, a Cloudfl
 After the firmware publishes, load the generated `.env` into the MQTTX process without echoing it or enabling shell tracing, then subscribe with:
 
 ```sh
-mqttx sub -h "$MQTT_HOST" -p "$MQTT_PORT" -l mqtts -u "$MQTT_USERNAME" -P "$MQTT_PASSWORD" -t "$MQTT_TOPIC"
+mqttx sub -h "$MQTT_HOST" -p "$MQTT_PORT" -l "$MQTT_PROTOCOL" -u "$MQTT_USERNAME" -P "$MQTT_PASSWORD" -t "$MQTT_TOPIC"
 ```
 
-Require one JSON message with finite `temperature` and `humidity`. MQTTX must verify the broker certificate; never pass `--insecure`. Stop the subscriber after the reading is captured. This check isolates firmware/Zero MQTT from dashboard problems.
+Require one JSON message with finite `temperature` and `humidity`. For `mqtts`, MQTTX must verify the broker certificate; never pass `--insecure`. Stop the subscriber after the reading is captured. This check isolates firmware and MQTT from dashboard problems.
 
 ## Local HTML
 
@@ -98,4 +103,4 @@ Only follow this section when the customer chose Remote URL.
    If browser automation is unavailable, verify HTTP success and one MQTTX message over WSS, open the URL with the operating system, and ask the customer to confirm those three UI details. Do not report the automation limitation as a page failure.
 4. Return the deployed URL, project path, observed reading, and any unresolved hardware limitation.
 
-Return the Zero instance ID, lifecycle/expiry information, MQTTS and WSS endpoints, but never its username, password, Wi-Fi password, or Cloudflare token. Zero EMQX is disposable and suitable only for demos; when it expires there is no `GET` or recovery path, so create a new instance and regenerate credentials. Offer `wrangler delete` for cleanup after the demo, but run it only after explicit confirmation. Do not add a backend Worker unless the customer requires a private production dashboard.
+Return the broker endpoints and, for Zero EMQX, its instance ID and lifecycle/expiry information, but never its username, password, Wi-Fi password, or Cloudflare token. Zero EMQX is disposable and suitable only for demos; when it expires there is no `GET` or recovery path, so create a new instance and regenerate credentials. Offer `wrangler delete` for cleanup after the demo, but run it only after explicit confirmation. Do not add a backend Worker unless the customer requires a private production dashboard.

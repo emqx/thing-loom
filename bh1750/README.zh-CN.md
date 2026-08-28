@@ -2,7 +2,7 @@
 
 [英文版](README.md)
 
-这个技能用于构建完整的 ESP32-C6 和 BH1750FVI 环境光监控器，包括硬件接线、项目生成、Zero EMQX 一次性命名空间、固件烧录、串口验证，以及本地或 Cloudflare 远程实时看板。
+这个技能用于构建完整的 ESP32-C6 和 BH1750FVI 环境光监控器，包括硬件接线、项目生成、Zero EMQX 或自有 MQTT Broker 配置、固件烧录、串口验证，以及本地或 Cloudflare 远程实时看板。
 
 ## 使用方法
 
@@ -18,7 +18,7 @@ codex
 帮我构建一个环境光监控器。
 ```
 
-智能体会指导接线，通过本地终端隐藏提示收集凭据，在征得同意后创建隔离的 Zero EMQX 命名空间，烧录固件，使用 MQTTX 验证真实照度消息，并打开实时看板。
+智能体会指导接线，通过本地终端隐藏提示收集凭据，使用 Zero EMQX 或自有 Broker，烧录固件，使用 MQTTX 验证真实照度消息，并打开实时看板。
 
 ![BH1750FVI 与 ESP32-C6 接线图](assets/bh1750fvi-esp32-c6-wiring.svg)
 
@@ -39,7 +39,7 @@ codex
 - **本地页面：**直接打开生成的 `web/public/index.html`，不会使用 Cloudflare。
 - **远程地址：**使用 Cloudflare Workers 静态资源部署同一页面，最小权限 API Token 只通过终端隐藏提示输入。
 
-Zero EMQX 提供需要认证的 MQTTS 和 WSS。脚手架将无线网络、MQTT 和可选 Cloudflare 凭据写入 `data/<项目名>/.env`，文件权限为 `600`。生成项目和所有 `.env` 文件都被 Git 忽略。
+Zero EMQX 仍是默认选项。传入 `--broker custom` 后，脚手架会在本地提示填写 Broker 主机、设备端口、`mqtt`/`mqtts` 协议、用户名、隐藏密码，以及单独的 `ws://`/`wss://` 看板地址。MQTTX 会先验证两个入口，成功后才写入项目文件；远程看板必须使用 `wss://`。脚手架将无线网络、MQTT 和可选 Cloudflare 凭据写入 `data/<项目名>/.env`，文件权限为 `600`。生成项目和所有 `.env` 文件都被 Git 忽略。
 
 远程静态页面必然包含一次性 Zero MQTT 的 WSS 凭据，因此只适合隔离的演示环境。私有或生产看板需要带鉴权的后端和可长期使用的消息服务。
 
