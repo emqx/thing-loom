@@ -1,0 +1,117 @@
+#include <__NETWORK_HEADER__>
+#include <PubSubClient.h>
+#include <WiFi.h>
+#include <time.h>
+
+#include "secrets.h"
+
+constexpr uint8_t SENSOR_PIN = __SENSOR_PIN__;
+constexpr uint32_t PUBLISH_INTERVAL_MS = 5000;
+constexpr uint16_t DRY_MV = __DRY_MV__;
+constexpr uint16_t WET_MV = __WET_MV__;
+constexpr char MQTT_TOPIC[] = "__MQTT_TOPIC__";
+
+__TLS_DECLARATIONS__
+
+__NETWORK_CLASS__ network;
+PubSubClient mqtt(network);
+uint32_t lastPublish = 0;
+
+bool connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) return true;
+
+  Serial.printf("Connecting to Wi-Fi %s", WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  const uint32_t started = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - started < 20000) {
+    delay(500);
+    Serial.print('.');
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf(" connected, IP: %s\n", WiFi.localIP().toString().c_str());
+    return true;
+  }
+
+  Serial.println(" timed out");
+  WiFi.disconnect();
+  const int count = WiFi.scanNetworks();
+  bool found = false;
+  for (int i = 0; i < count; ++i) {
+    if (WiFi.SSID(i) == WIFI_SSID) {
+      Serial.printf("SSID found, RSSI: %d dBm; check password/security settings\n", WiFi.RSSI(i));
+      found = true;
+      break;
+    }
+  }
+  if (!found) Serial.println("SSID not visible; enable its 2.4 GHz network");
+  WiFi.scanDelete();
+  return false;
+}
+
+bool syncClock() {
+  if (time(nullptr) > 1700000000) return true;
+
+  Serial.print("Synchronizing clock");
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  const uint32_t started = millis();
+  while (time(nullptr) <= 1700000000 && millis() - started < 15000) {
+    delay(500);
+    Serial.print('.');
+  }
+  const bool synced = time(nullptr) > 1700000000;
+  Serial.println(synced ? " synchronized" : " timed out");
+  return synced;
+}
+
+void connectMQTT() {
+  while (!mqtt.connected()) {
+    const String clientId = "esp32-c6-sen0193-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+    Serial.printf("Connecting to MQTT as %s... ", clientId.c_str());
+    if (mqtt.connect(clientId.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
+      Serial.println("connected");
+    } else {
+      Serial.printf("failed (state %d), retrying\n", mqtt.state());
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  analogReadResolution(12);
+  analogSetPinAttenuation(SENSOR_PIN, ADC_11db);
+  Serial.printf("SEN0193 on GPIO %u; calibration dry=%u mV wet=%u mV\n", SENSOR_PIN, DRY_MV, WET_MV);
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  __TLS_SETUP__
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+void loop() {
+  if (!connectWiFi()) {
+    delay(2000);
+    return;
+  }
+  __CLOCK_GUARD__
+  connectMQTT();
+  mqtt.loop();
+
+  const uint32_t now = millis();
+  if (now - lastPublish < PUBLISH_INTERVAL_MS) return;
+  lastPublish = now;
+
+  uint32_t millivolts = 0;
+  for (uint8_t i = 0; i < 8; ++i) millivolts += analogReadMilliVolts(SENSOR_PIN);
+  millivolts /= 8;
+  const float moisture = constrain(
+      100.0f * (DRY_MV - static_cast<float>(millivolts)) / (DRY_MV - WET_MV), 0.0f, 100.0f);
+
+  char payload[64];
+  snprintf(payload, sizeof(payload), "{\"moisture\":%.1f,\"millivolts\":%lu}", moisture,
+           static_cast<unsigned long>(millivolts));
+  if (mqtt.publish(MQTT_TOPIC, payload, true)) {
+    Serial.printf("Published %s -> %s\n", MQTT_TOPIC, payload);
+  } else {
+    Serial.println("MQTT publish failed");
+  }
+}

@@ -28,7 +28,7 @@ MQTT、TLS、云端凭据和看板。大多数教程在生成代码后就结束�
 
 ## 开始前的准备
 
-准备一块 ESP32 开发板、DHT22 或 BH1750FVI 等受支持的传感器、USB 数据线和杜邦线，
+准备一块 ESP32 开发板、DHT22、BH1750FVI 或 SEN0193 等受支持的传感器、USB 数据线和杜邦线，
 再连接到可用的 2.4 GHz 无线网络，就可以开始。首次体验可以选择一次性的 Zero
 EMQX，也可以连接已有的 MQTT Broker。如需长期稳定运行但还没有自己的 Broker，
 可以前往 [EMQX Cloud 创建 Serverless 或 Dedicated Flex 部署](https://www.emqx.com/en/cloud)。
@@ -70,6 +70,22 @@ codex
 [BH1750FVI 项目](bh1750/README.zh-CN.md)沿用同一条经过验证的完整链路，并以
 勒克斯为单位发布真实照度读数。
 
+### 土壤湿度
+
+```sh
+cd thing-loom/sen0193
+codex
+```
+
+然后输入：
+
+```text
+帮我构建一个土壤湿度监控器。
+```
+
+[SEN0193 项目](sen0193/README.zh-CN.md)以毫伏值校准模拟传感器，将读数转换为相对湿度百分比，
+并在看板中说明换算方法。
+
 ## 工具链
 
 | 工具 | 作用 |
@@ -103,6 +119,7 @@ SLA，因此不应承载生产流量。
 
 - [x] ESP32-C6 和 DHT22 -> 安全 MQTT -> 实时看板
 - [x] ESP32-C6 和 BH1750FVI -> 安全 MQTT -> 实时看板
+- [x] ESP32-C6 和 SEN0193 -> 安全 MQTT -> 校准后的实时看板
 - [ ] MQTT -> EMQX Tables 时序存储
 - [ ] 历史图表、告警和长期运行的智能家居部署
 - [ ] 更多经过验证的传感器技能

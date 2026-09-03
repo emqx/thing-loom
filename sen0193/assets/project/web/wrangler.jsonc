@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "__WORKER_NAME__",
+  "compatibility_date": "__COMPATIBILITY_DATE__",
+  "assets": {
+    "directory": "./public"
+  }
+}

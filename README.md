@@ -32,8 +32,8 @@ One prompt
 
 ## Before you start
 
-Bring an ESP32 development board, a supported sensor such as a DHT22 or
-BH1750FVI, a USB data cable, jumper wires, and access to a 2.4 GHz Wi-Fi network.
+Bring an ESP32 development board, a supported sensor such as a DHT22,
+BH1750FVI, or SEN0193, a USB data cable, jumper wires, and access to a 2.4 GHz Wi-Fi network.
 That is enough to begin. Choose the disposable Zero EMQX environment for a
 quick demo, or connect your own MQTT broker for an existing deployment. If you
 need a reliable long-term broker but do not have one, [create an EMQX Cloud
@@ -41,7 +41,7 @@ Serverless or Dedicated Flex deployment](https://www.emqx.com/en/cloud).
 
 ## Try a project
 
-Start with either verified end-to-end skill:
+Start with any verified end-to-end skill:
 
 ### Temperature and humidity
 
@@ -78,6 +78,22 @@ Build me an ambient-light monitor.
 The [BH1750FVI project](bh1750/README.md) follows the same verified path and
 publishes real illuminance readings in lux.
 
+### Soil moisture
+
+```sh
+cd thing-loom/sen0193
+codex
+```
+
+Then ask:
+
+```text
+Build me a soil-moisture monitor.
+```
+
+The [SEN0193 project](sen0193/README.md) calibrates the analog sensor in millivolts,
+converts readings to relative moisture percentage, and explains the conversion on the dashboard.
+
 ## The toolchain
 
 | Tool | Role |
@@ -113,6 +129,7 @@ queries, analytics, and visualization.
 
 - [x] ESP32-C6 + DHT22 -> secure MQTT -> live dashboard
 - [x] ESP32-C6 + BH1750FVI -> secure MQTT -> live dashboard
+- [x] ESP32-C6 + SEN0193 -> secure MQTT -> calibrated live dashboard
 - [ ] MQTT -> EMQX Tables time-series storage
 - [ ] Historical charts, alerts, and long-running smart-home deployments
 - [ ] More verified sensor skills

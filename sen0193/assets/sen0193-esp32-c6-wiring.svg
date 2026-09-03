@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title description">
+  <title id="title">SEN0193 connected to an ESP32-C6-DevKitC-1</title>
+  <desc id="description">Connect sensor VCC to ESP32 3V3, AOUT or S to GPIO 0, and GND to GND.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #172033; }
+    .heading { font-size: 30px; font-weight: 700; }
+    .label { font-size: 20px; font-weight: 650; }
+    .note { font-size: 17px; fill: #526078; }
+    .wire { fill: none; stroke-width: 8; stroke-linecap: round; }
+  </style>
+  <rect width="1000" height="620" rx="24" fill="#f8fafc"/>
+  <text x="500" y="52" text-anchor="middle" class="heading">ESP32-C6 + SEN0193 wiring</text>
+
+  <rect x="90" y="110" width="285" height="390" rx="24" fill="#2563eb" stroke="#1e3a8a" stroke-width="3"/>
+  <rect x="170" y="145" width="125" height="260" rx="50" fill="#111827" stroke="#93c5fd" stroke-width="3"/>
+  <line x1="195" y1="245" x2="195" y2="380" stroke="#64748b" stroke-width="8"/>
+  <line x1="232" y1="245" x2="232" y2="380" stroke="#64748b" stroke-width="8"/>
+  <line x1="269" y1="245" x2="269" y2="380" stroke="#64748b" stroke-width="8"/>
+  <text x="232" y="435" text-anchor="middle" class="label" fill="#ffffff">SEN0193 sensor</text>
+  <text x="232" y="451" text-anchor="middle" class="note" fill="#dbeafe">Use the printed labels</text>
+  <circle cx="375" cy="180" r="8" fill="#ef4444"/><text x="345" y="186" text-anchor="end" class="label" fill="#ffffff">VCC / +</text>
+  <circle cx="375" cy="280" r="8" fill="#eab308"/><text x="345" y="286" text-anchor="end" class="label" fill="#ffffff">AOUT / S</text>
+  <circle cx="375" cy="380" r="8" fill="#1f2937" stroke="#ffffff" stroke-width="2"/><text x="345" y="386" text-anchor="end" class="label" fill="#ffffff">GND / −</text>
+
+  <rect x="650" y="95" width="260" height="430" rx="24" fill="#172033" stroke="#0b1020" stroke-width="3"/>
+  <rect x="714" y="110" width="132" height="58" rx="8" fill="#cbd5e1"/>
+  <rect x="750" y="235" width="125" height="150" rx="12" fill="#34445f" stroke="#94a3b8" stroke-width="2"/>
+  <text x="812" y="295" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">ESP32-C6</text>
+  <text x="812" y="328" text-anchor="middle" font-size="16" fill="#dbeafe">DevKitC-1</text>
+  <circle cx="650" cy="180" r="8" fill="#ef4444"/><text x="680" y="186" class="label" fill="#ffffff">3V3</text>
+  <circle cx="650" cy="280" r="8" fill="#eab308"/><text x="680" y="286" class="label" fill="#ffffff">GPIO 0 (ADC)</text>
+  <circle cx="650" cy="380" r="8" fill="#1f2937" stroke="#ffffff" stroke-width="2"/><text x="680" y="386" class="label" fill="#ffffff">GND</text>
+
+  <path d="M383 180 H642" class="wire" stroke="#ef4444"/>
+  <path d="M383 280 H642" class="wire" stroke="#eab308"/>
+  <path d="M383 380 H642" class="wire" stroke="#1f2937"/>
+  <text x="500" y="562" text-anchor="middle" class="note">VCC / red → 3V3    AOUT / yellow → GPIO 0    GND / black → GND</text>
+  <text x="500" y="592" text-anchor="middle" class="note">Keep the electronics above the marked immersion line dry.</text>
+</svg>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "ESP32 SEN0193 + MQTT"
+  short_description: "Wire, flash, and view a SEN0193 MQTT monitor"
+  default_prompt: "Use $esp32-sen0193-cloudflare to guide me from wiring an ESP32-C6 and SEN0193 through Zero EMQX or custom MQTT broker setup, flashing, and a local or remote dashboard."
