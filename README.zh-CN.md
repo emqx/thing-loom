@@ -29,9 +29,9 @@ MQTT、TLS、云端凭据和看板。大多数教程在生成代码后就结束�
 ## 开始前的准备
 
 准备一块 ESP32 开发板、DHT22、BH1750FVI 或 SEN0193 等受支持的传感器、USB 数据线和杜邦线，
-再连接到可用的 2.4 GHz 无线网络，就可以开始。首次体验可以选择一次性的 Zero
-EMQX，也可以连接已有的 MQTT Broker。如需长期稳定运行但还没有自己的 Broker，
-可以前往 [EMQX Cloud 创建 Serverless 或 Dedicated Flex 部署](https://www.emqx.com/en/cloud)。
+再连接到可用的 2.4 GHz 无线网络，就可以开始。快速体验或轻量级长期项目可以选择
+Zero EMQX，也可以连接已有的 MQTT Broker。如需带 SLA 的服务，可以前往
+[EMQX Cloud 创建 Serverless 或 Dedicated Flex 部署](https://www.emqx.com/en/cloud)。
 
 ## 尝试一个项目
 
@@ -93,18 +93,20 @@ codex
 | 智能体技能 | 将一句话需求转化为可重复执行的硬件流程。 |
 | [Arduino CLI](https://arduino.github.io/arduino-cli/) | 编译、烧录并监控 ESP32 固件。 |
 | [EMQX Cloud](https://www.emqx.com/en/cloud) | 在没有自有 Broker 时创建托管的 Serverless 或 Dedicated Flex 部署。 |
-| [Zero EMQX](https://zero.emqx.io/) | 创建隔离、一次性使用的 MQTT 命名空间，提供需要认证的 MQTTS 和 WSS 消息传输。 |
+| [Zero EMQX](https://zero.emqx.io/) | 创建隔离的 MQTT 命名空间，提供需要认证的 MQTTS 和 WSS 消息传输；可长期运行，但不提供 SLA。 |
 | [MQTTX CLI](https://mqttx.app/docs/cli/downloading-and-installation) | 独立验证设备消息是否真正到达 MQTT。 |
 | [Cloudflare Workers 静态资源](https://developers.cloudflare.com/workers/static-assets/) | 在需要远程地址时发布实时浏览器看板。 |
 | [EMQX Tables](https://www.emqx.com/en/cloud/emqx-tables) | **待办：**持久化、查询并可视化设备时序数据。 |
 
 ## 从第一条读数走向长期智能家居
 
-Zero EMQX 面向原型、演示和首次链路验证。它的命名空间会自动过期，并且服务不提供
-SLA，因此不应承载生产流量。
+Zero EMQX 可以支持长期运行的设备，并非只能用于短期演示。使用默认的 `idle_ttl`
+生命周期时，只要设备或看板保持连接，命名空间就会一直保留；只有所有客户端断开并
+超过创建时返回的空闲时长后才会删除。该服务不提供 SLA，因此适合原型、个人项目和
+非关键的长期部署，不适合要求可用性承诺的业务。
 
-当设备需要持久凭据、长期运行、SLA 或生产级容量时，请使用自己的 Broker，或前往
-[EMQX Cloud 创建部署](https://www.emqx.com/en/cloud)。
+当设备需要 SLA、确定的生产容量，或不依赖活跃连接的生命周期时，请使用自己的
+Broker，或前往 [EMQX Cloud 创建部署](https://www.emqx.com/en/cloud)。
 可以选择 **Serverless**，以按使用量计费的方式快速起步；也可以选择
 **Dedicated Flex**，获得专属资源、更高性能和企业级能力。随后使用 EMQX Tables 在
 同一个托管平台中保存 MQTT 遥测数据，用于历史查询、分析和可视化。

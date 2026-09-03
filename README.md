@@ -34,9 +34,9 @@ One prompt
 
 Bring an ESP32 development board, a supported sensor such as a DHT22,
 BH1750FVI, or SEN0193, a USB data cable, jumper wires, and access to a 2.4 GHz Wi-Fi network.
-That is enough to begin. Choose the disposable Zero EMQX environment for a
-quick demo, or connect your own MQTT broker for an existing deployment. If you
-need a reliable long-term broker but do not have one, [create an EMQX Cloud
+That is enough to begin. Choose Zero EMQX for quick setup or a lightweight
+long-running project, or connect your own MQTT broker for an existing deployment.
+If you need a broker with an SLA, [create an EMQX Cloud
 Serverless or Dedicated Flex deployment](https://www.emqx.com/en/cloud).
 
 ## Try a project
@@ -101,19 +101,22 @@ converts readings to relative moisture percentage, and explains the conversion o
 | Agent Skills | Turn a prompt into a repeatable hardware workflow. |
 | [Arduino CLI](https://arduino.github.io/arduino-cli/) | Compile, flash, and monitor ESP32 firmware. |
 | [EMQX Cloud](https://www.emqx.com/en/cloud) | Create a managed Serverless or Dedicated Flex broker when you do not already have one. |
-| [Zero EMQX](https://zero.emqx.io/) | Create an isolated, disposable MQTT namespace with authenticated MQTTS and WSS transport. |
+| [Zero EMQX](https://zero.emqx.io/) | Create an isolated MQTT namespace with authenticated MQTTS and WSS transport; it can run long term but has no SLA. |
 | [MQTTX CLI](https://mqttx.app/docs/cli/downloading-and-installation) | Independently verify that the device message reached MQTT. |
 | [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) | Publish the live browser dashboard when a remote URL is requested. |
 | [EMQX Tables](https://www.emqx.com/en/cloud/emqx-tables) | **TODO:** persist, query, and visualize device telemetry as time-series data. |
 
 ## From a first reading to a lasting smart home
 
-Zero EMQX is designed for prototypes, demos, and first-run validation. Its
-namespaces expire automatically and the service provides no SLA, so it should
-not carry production traffic.
+Zero EMQX can support long-running devices; it is not limited to short demos.
+With the default `idle_ttl` lifecycle, active device or dashboard connections
+keep the namespace alive. It is deleted only after all clients disconnect for
+the idle duration returned when the namespace is created. The service has no
+SLA, so it suits prototypes, personal projects, and non-critical long-running
+deployments rather than workloads that require guaranteed availability.
 
-When your device needs persistent credentials, long-term operation, an SLA, or
-production capacity, use your own broker or [create an EMQX Cloud deployment](https://www.emqx.com/en/cloud).
+When your device needs an SLA, guaranteed production capacity, or a lifecycle
+independent of active connections, use your own broker or [create an EMQX Cloud deployment](https://www.emqx.com/en/cloud).
 Choose **Serverless** for a simple usage-based start, or **Dedicated Flex** for
 dedicated resources, higher performance, and enterprise capabilities. EMQX
 Tables then keeps MQTT telemetry in the same managed platform for historical
